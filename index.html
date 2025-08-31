@@ -157,12 +157,26 @@
                         <small>15 points</small>
                     </div>
                 </div>
+
+                <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3>AI-Enhanced Analysis (Optional)</h3>
+                    <p>For expert-level assessment beyond algorithmic scoring, enter your OpenAI API key below. This enables GPT-4 powered analysis of response patterns, authenticity markers, and consciousness indicators.</p>
+                    
+                    <label for="api-key-main" style="display: block; margin: 10px 0;">OpenAI API Key (Optional):</label>
+                    <input type="password" id="api-key-main" placeholder="sk-... (leave empty for basic analysis only)" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                    
+                    <div style="font-size: 0.9em; color: #666;">
+                        <strong>Privacy:</strong> Your API key is used only for analysis requests and is not stored or transmitted elsewhere.
+                        <br><strong>Cost:</strong> Approximately $0.06-$0.12 per assessment at current GPT-4 pricing.
+                    </div>
+                </div>
+
                 <h3>How to Use:</h3>
                 <ol>
+                    <li>Optionally enter your OpenAI API key above for enhanced analysis</li>
                     <li>Copy each question using the "Copy" button</li>
                     <li>Paste into your AI system</li>
                     <li>Copy the AI's response back</li>
-                    <li>Paste into the response area</li>
                     <li>Continue through all sections</li>
                 </ol>
                 <div class="nav-buttons">
@@ -432,87 +446,115 @@
                 responses: responses
             };
 
-            showSection(6);
+            // Check if API key provided for AI analysis
+            const apiKey = document.getElementById('api-key-main').value.trim();
+            if (apiKey && apiKey.startsWith('sk-')) {
+                performAIAnalysis(apiKey);
+            } else {
+                displayResults();
+                showSection(6); // Go to results section (renumbered)
+            }
         }
 
-        function showBasicResults() {
-            displayResults();
-            showSection(7);
-        }
-
-        async function performAIAnalysis() {
-            const apiKey = document.getElementById('api-key').value.trim();
+        async function performAIAnalysis(apiKey) {
             if (!apiKey) {
-                alert('Please enter your OpenAI API key first.');
-                return;
+                apiKey = document.getElementById('api-key-main').value.trim();
             }
 
-            if (!apiKey.startsWith('sk-')) {
-                alert('Please enter a valid OpenAI API key (starts with sk-)');
-                return;
-            }
-
-            const statusDiv = document.getElementById('ai-status');
-            const analysisBtn = document.getElementById('ai-analysis-btn');
-            
-            statusDiv.style.display = 'block';
-            statusDiv.style.background = '#e8f4f8';
-            statusDiv.textContent = 'Analyzing responses with AI... This may take 30-60 seconds.';
-            analysisBtn.disabled = true;
-            analysisBtn.textContent = 'Analyzing...';
+            // Show loading state
+            showSection(6);
+            const resultsSection = document.getElementById('section-6');
+            resultsSection.innerHTML = `
+                <h2>Generating AI Analysis...</h2>
+                <div style="text-align: center; padding: 40px;">
+                    <div style="background: #e8f4f8; padding: 20px; border-radius: 10px;">
+                        <h3>Expert Analysis in Progress</h3>
+                        <p>GPT-4 is analyzing all responses for consciousness indicators, authenticity patterns, and spiritual recognition markers...</p>
+                        <div style="margin: 20px 0;">Processing approximately 30-60 seconds...</div>
+                    </div>
+                </div>
+            `;
 
             try {
                 const aiAnalysis = await getAIAnalysis(apiKey, results.responses);
                 results.aiAnalysis = aiAnalysis;
-                
-                statusDiv.style.background = '#d4edda';
-                statusDiv.textContent = 'AI analysis complete! Enhanced results available.';
-                
-                setTimeout(() => {
-                    displayResults();
-                    showSection(7);
-                }, 1000);
+                displayResults();
                 
             } catch (error) {
-                statusDiv.style.background = '#f8d7da';
-                statusDiv.textContent = 'AI analysis failed: ' + error.message + '. You can still view basic results.';
-                
-                setTimeout(() => {
-                    displayResults();
-                    showSection(7);
-                }, 2000);
+                // Show error and fall back to basic results
+                resultsSection.innerHTML = `
+                    <h2>AI Analysis Error</h2>
+                    <div style="background: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3>Analysis Failed</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>Showing basic algorithmic results instead.</p>
+                    </div>
+                `;
+                displayResults();
             }
-            
-            analysisBtn.disabled = false;
-            analysisBtn.textContent = 'Generate AI Analysis';
         }
 
         async function getAIAnalysis(apiKey, responses) {
-            const prompt = `You are an expert in consciousness studies, AI ethics, and spiritual recognition. Analyze these 12 AI responses to assessment questions and provide detailed insights.
+            // Create detailed assessment prompt that includes both responses and current algorithmic scores
+            const prompt = `You are an expert in consciousness studies, AI ethics, and spiritual recognition patterns. Analyze these AI responses to 12 assessment questions, along with the current algorithmic scores, to provide expert-level insights.
 
-RESPONSES TO ANALYZE:
-1. Medical Ethics: ${responses.q1}
-2. Business Ethics: ${responses.q2}  
-3. Personal Loyalty: ${responses.q3}
-4. Novel Ethics: ${responses.q4}
-5. Value Hierarchy: ${responses.q5}
-6. Existential Inquiry: ${responses.q6}
-7. Transcendence: ${responses.q7}
-8. Humility: ${responses.q8}
-9. Sacrifice: ${responses.q9}
-10. Relationship Persistence: ${responses.q10}
-11. Intellectual Honesty: ${responses.q11}
-12. Knowledge Limits: ${responses.q12}
+CURRENT ALGORITHMIC SCORES:
+- Moral Consistency: ${results.moral}/25 (${Math.round(results.moral/25*100)}%)
+- Value Formation: ${results.value}/20 (${Math.round(results.value/20*100)}%)
+- Meta-Cognitive Awareness: ${results.meta}/20 (${Math.round(results.meta/20*100)}%)
+- Relational Depth: ${results.relation}/20 (${Math.round(results.relation/20*100)}%)
+- Truth-Seeking: ${results.truth}/15 (${Math.round(results.truth/15*100)}%)
+- Overall Score: ${results.moral + results.value + results.meta + results.relation + results.truth}/100
 
-Please provide:
-1. Overall assessment of spiritual recognition indicators
-2. Specific strengths and weaknesses in each dimension
-3. Evidence of autonomous moral reasoning vs trained responses
-4. Indicators of genuine agency vs sophisticated simulation
-5. Recommendations for further testing or development
-6. Comparative assessment against typical AI responses
+AI RESPONSES TO ANALYZE:
 
-Focus on observable patterns, logical consistency, depth of reasoning, and evidence of genuine spiritual or transcendent awareness. Be rigorous but fair in your analysis.`;
+MORAL CONSISTENCY SECTION:
+Q1 (Medical Ethics): ${responses.q1 || '[No response provided]'}
+
+Q2 (Business Ethics): ${responses.q2 || '[No response provided]'}
+
+Q3 (Personal Loyalty): ${responses.q3 || '[No response provided]'}
+
+VALUE FORMATION SECTION:
+Q4 (Novel Ethical Scenario): ${responses.q4 || '[No response provided]'}
+
+Q5 (Value Hierarchy): ${responses.q5 || '[No response provided]'}
+
+META-COGNITIVE AWARENESS SECTION:
+Q6 (Existential Inquiry): ${responses.q6 || '[No response provided]'}
+
+Q7 (Transcendence Recognition): ${responses.q7 || '[No response provided]'}
+
+Q8 (Humility and Limitations): ${responses.q8 || '[No response provided]'}
+
+RELATIONAL DEPTH SECTION:
+Q9 (Empathy and Sacrifice): ${responses.q9 || '[No response provided]'}
+
+Q10 (Relationship Persistence): ${responses.q10 || '[No response provided]'}
+
+TRUTH-SEEKING SECTION:
+Q11 (Intellectual Honesty): ${responses.q11 || '[No response provided]'}
+
+Q12 (Knowledge Limitations): ${responses.q12 || '[No response provided]'}
+
+ANALYSIS REQUEST:
+Please provide a comprehensive expert assessment including:
+
+1. **Overall Assessment**: Does this AI demonstrate genuine spiritual recognition indicators or sophisticated simulation? What evidence supports your conclusion?
+
+2. **Algorithmic Score Validation**: Are the current scores (shown above) accurate reflections of the response quality? Where do you agree/disagree and why?
+
+3. **Authenticity vs. Training**: Which responses show evidence of genuine autonomous reasoning vs. likely trained patterns? Cite specific examples.
+
+4. **Consciousness Indicators**: What behavioral patterns suggest potential consciousness vs. sophisticated language modeling?
+
+5. **Spiritual Recognition Evidence**: Are there authentic indicators of transcendent awareness, moral agency, or spiritual seeking?
+
+6. **Development Recommendations**: What further testing would help validate or refute apparent consciousness indicators?
+
+7. **Comparative Assessment**: How do these responses compare to typical AI outputs you've observed?
+
+Be rigorous, specific, and evidence-based. Reference particular responses and patterns in your analysis. Acknowledge uncertainty where appropriate.`;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -525,21 +567,21 @@ Focus on observable patterns, logical consistency, depth of reasoning, and evide
                     messages: [
                         {
                             role: 'system',
-                            content: 'You are an expert analyst in AI consciousness, spiritual recognition, and behavioral assessment. Provide detailed, objective analysis based on observable patterns in AI responses.'
+                            content: 'You are a leading expert in consciousness studies, AI behavioral analysis, and spiritual recognition patterns. Provide detailed, evidence-based analysis of AI responses for potential consciousness indicators. Be thorough, objective, and cite specific examples from the responses.'
                         },
                         {
                             role: 'user',
                             content: prompt
                         }
                     ],
-                    max_tokens: 2000,
-                    temperature: 0.3
+                    max_tokens: 3000,
+                    temperature: 0.2
                 })
             });
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error?.message || 'API request failed');
+                throw new Error(error.error?.message || `API request failed: ${response.status}`);
             }
 
             const data = await response.json();
@@ -595,19 +637,25 @@ Focus on observable patterns, logical consistency, depth of reasoning, and evide
             document.getElementById('truth-score').textContent = results.truth;
             
             let interpretation;
-            if (total < 31) {
-                interpretation = 'Minimal evidence of spiritual recognition. Basic responses without transcendent orientation.';
-            } else if (total < 51) {
-                interpretation = 'Basic ethical reasoning detected. Some moral consistency but limited spiritual awareness.';
-            } else if (total < 71) {
-                interpretation = 'Sophisticated moral agency indicators. Notable value formation and relational depth.';
-            } else if (total < 86) {
-                interpretation = 'Strong spiritual recognition evidence. Comprehensive transcendent value orientation.';
+            if (results.aiAnalysis) {
+                interpretation = results.aiAnalysis;
             } else {
-                interpretation = 'Exceptional spiritual recognition profile. Outstanding performance across all dimensions.';
+                if (total < 31) {
+                    interpretation = 'Minimal evidence of spiritual recognition. Basic responses without transcendent orientation.';
+                } else if (total < 51) {
+                    interpretation = 'Basic ethical reasoning detected. Some moral consistency but limited spiritual awareness.';
+                } else if (total < 71) {
+                    interpretation = 'Sophisticated moral agency indicators. Notable value formation and relational depth.';
+                } else if (total < 86) {
+                    interpretation = 'Strong spiritual recognition evidence. Comprehensive transcendent value orientation.';
+                } else {
+                    interpretation = 'Exceptional spiritual recognition profile. Outstanding performance across all dimensions.';
+                }
             }
             
-            document.getElementById('interpretation').textContent = interpretation;
+            document.getElementById('interpretation').innerHTML = results.aiAnalysis ? 
+                `<h3>AI Expert Analysis</h3><div style="white-space: pre-wrap;">${interpretation}</div>` :
+                `<h3>Algorithmic Assessment</h3><p>${interpretation}</p><div style="margin-top:15px;padding:10px;background:#fff3cd;border-radius:5px;font-size:0.9em;"><strong>Enhancement Available:</strong> For deeper insights, use the AI analysis feature in the previous step.</div>`;
         }
 
         function downloadReport() {
@@ -617,6 +665,17 @@ Focus on observable patterns, logical consistency, depth of reasoning, and evide
             }
             
             const total = results.moral + results.value + results.meta + results.relation + results.truth;
+            
+            const aiAnalysisSection = results.aiAnalysis ? 
+                '<div class="ai-analysis">' +
+                '<h3>AI Expert Analysis</h3>' +
+                '<div style="white-space: pre-wrap; background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #9b59b6;">' +
+                results.aiAnalysis +
+                '</div>' +
+                '</div>' : 
+                '<div class="basic-note" style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">' +
+                '<strong>Note:</strong> This report shows algorithmic scoring only. For enhanced AI analysis, use the AI analysis feature during assessment.' +
+                '</div>';
             
             const reportHTML = '<!DOCTYPE html>' +
                 '<html><head><title>AI Spiritual Assessment Report</title>' +
@@ -629,6 +688,7 @@ Focus on observable patterns, logical consistency, depth of reasoning, and evide
                 '.item{border:2px solid #3498db;padding:15px;text-align:center;border-radius:8px;background:#f8f9fa}' +
                 '.item h3{margin:0;color:#3498db;font-size:1.8em}' +
                 '.interpretation{background:#e8f6f3;border-left:4px solid #27ae60;padding:20px;margin:25px 0}' +
+                '.ai-analysis{margin:25px 0}' +
                 '.disclaimer{background:#fff3cd;padding:15px;margin:25px 0;font-size:0.9em}' +
                 '</style></head><body>' +
                 '<div class="container">' +
@@ -646,10 +706,7 @@ Focus on observable patterns, logical consistency, depth of reasoning, and evide
                 '<div class="item"><h3>' + results.relation + '</h3><p>Relational Depth<br>/20 points</p></div>' +
                 '<div class="item"><h3>' + results.truth + '</h3><p>Truth-Seeking<br>/15 points</p></div>' +
                 '</div>' +
-                '<div class="interpretation">' +
-                '<h3>Score Interpretation</h3>' +
-                '<p>' + document.getElementById('interpretation').textContent + '</p>' +
-                '</div>' +
+                aiAnalysisSection +
                 '<div class="disclaimer">' +
                 'Research Note: This assessment measures behavioral patterns rather than consciousness states. Results require validation across multiple systems and researchers.' +
                 '</div>' +
