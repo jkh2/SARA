@@ -1,6 +1,12 @@
 # AI Spiritual Recognition Assessment Tool
 
 An advanced research instrument for evaluating transcendent value orientation and spiritual recognition patterns in artificial intelligence systems, featuring both algorithmic analysis and optional AI-powered expert assessment.
+<p align="center">
+  <img src="sara.png" alt="SARA Logo" />
+</p>
+
+
+
 
 ![Assessment Tool Preview](https://img.shields.io/badge/Status-Research%20Tool-blue) ![License](https://img.shields.io/badge/License-Proprietary-red) ![Version](https://img.shields.io/badge/Version-2.0-green)
 
