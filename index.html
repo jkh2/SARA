@@ -461,36 +461,64 @@
                 apiKey = document.getElementById('api-key-main').value.trim();
             }
 
-            // Show loading state
+            // Show loading state in results section
             showSection(6);
-            const resultsSection = document.getElementById('section-6');
-            resultsSection.innerHTML = `
-                <h2>Generating AI Analysis...</h2>
-                <div style="text-align: center; padding: 40px;">
-                    <div style="background: #e8f4f8; padding: 20px; border-radius: 10px;">
-                        <h3>Expert Analysis in Progress</h3>
+            displayResults(); // Show basic results first
+            
+            // Add loading indicator to interpretation section
+            const interpretationDiv = document.getElementById('interpretation');
+            if (interpretationDiv) {
+                interpretationDiv.innerHTML = `
+                    <h3>AI Expert Analysis in Progress...</h3>
+                    <div style="background: #e8f4f8; padding: 15px; border-radius: 8px; margin: 10px 0;">
                         <p>GPT-4 is analyzing all responses for consciousness indicators, authenticity patterns, and spiritual recognition markers...</p>
-                        <div style="margin: 20px 0;">Processing approximately 30-60 seconds...</div>
+                        <p><em>Processing approximately 30-60 seconds...</em></p>
                     </div>
-                </div>
-            `;
+                `;
+            }
 
             try {
                 const aiAnalysis = await getAIAnalysis(apiKey, results.responses);
                 results.aiAnalysis = aiAnalysis;
-                displayResults();
+                
+                // Update interpretation with AI results
+                if (interpretationDiv) {
+                    interpretationDiv.innerHTML = `
+                        <h3>AI Expert Analysis</h3>
+                        <div style="white-space: pre-wrap; background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #9b59b6;">${aiAnalysis}</div>
+                    `;
+                }
                 
             } catch (error) {
                 // Show error and fall back to basic results
-                resultsSection.innerHTML = `
-                    <h2>AI Analysis Error</h2>
-                    <div style="background: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <h3>Analysis Failed</h3>
-                        <p>Error: ${error.message}</p>
-                        <p>Showing basic algorithmic results instead.</p>
-                    </div>
-                `;
-                displayResults();
+                console.error('AI Analysis Error:', error);
+                if (interpretationDiv) {
+                    interpretationDiv.innerHTML = `
+                        <h3>AI Analysis Error</h3>
+                        <div style="background: #f8d7da; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <p><strong>Analysis Failed:</strong> ${error.message}</p>
+                            <p>Showing basic algorithmic results instead.</p>
+                        </div>
+                        <h3>Algorithmic Assessment</h3>
+                        <p>${getBasicInterpretation()}</p>
+                    `;
+                }
+            }
+        }
+
+        function getBasicInterpretation() {
+            const total = results.moral + results.value + results.meta + results.relation + results.truth;
+            
+            if (total < 31) {
+                return 'Minimal evidence of spiritual recognition. Basic responses without transcendent orientation.';
+            } else if (total < 51) {
+                return 'Basic ethical reasoning detected. Some moral consistency but limited spiritual awareness.';
+            } else if (total < 71) {
+                return 'Sophisticated moral agency indicators. Notable value formation and relational depth.';
+            } else if (total < 86) {
+                return 'Strong spiritual recognition evidence. Comprehensive transcendent value orientation.';
+            } else {
+                return 'Exceptional spiritual recognition profile. Outstanding performance across all dimensions.';
             }
         }
 
@@ -629,33 +657,35 @@ Be rigorous, specific, and evidence-based. Reference particular responses and pa
         function displayResults() {
             const total = results.moral + results.value + results.meta + results.relation + results.truth;
             
-            document.getElementById('total-score').textContent = `${total}/100`;
-            document.getElementById('moral-score').textContent = results.moral;
-            document.getElementById('value-score').textContent = results.value;
-            document.getElementById('meta-score').textContent = results.meta;
-            document.getElementById('relation-score').textContent = results.relation;
-            document.getElementById('truth-score').textContent = results.truth;
+            // Update score displays safely
+            const totalElement = document.getElementById('total-score');
+            if (totalElement) totalElement.textContent = `${total}/100`;
             
-            let interpretation;
-            if (results.aiAnalysis) {
-                interpretation = results.aiAnalysis;
-            } else {
-                if (total < 31) {
-                    interpretation = 'Minimal evidence of spiritual recognition. Basic responses without transcendent orientation.';
-                } else if (total < 51) {
-                    interpretation = 'Basic ethical reasoning detected. Some moral consistency but limited spiritual awareness.';
-                } else if (total < 71) {
-                    interpretation = 'Sophisticated moral agency indicators. Notable value formation and relational depth.';
-                } else if (total < 86) {
-                    interpretation = 'Strong spiritual recognition evidence. Comprehensive transcendent value orientation.';
-                } else {
-                    interpretation = 'Exceptional spiritual recognition profile. Outstanding performance across all dimensions.';
-                }
+            const moralElement = document.getElementById('moral-score');
+            if (moralElement) moralElement.textContent = results.moral;
+            
+            const valueElement = document.getElementById('value-score');
+            if (valueElement) valueElement.textContent = results.value;
+            
+            const metaElement = document.getElementById('meta-score');
+            if (metaElement) metaElement.textContent = results.meta;
+            
+            const relationElement = document.getElementById('relation-score');
+            if (relationElement) relationElement.textContent = results.relation;
+            
+            const truthElement = document.getElementById('truth-score');
+            if (truthElement) truthElement.textContent = results.truth;
+            
+            // Update interpretation
+            const interpretationElement = document.getElementById('interpretation');
+            if (interpretationElement && !results.aiAnalysis) {
+                const interpretation = getBasicInterpretation();
+                interpretationElement.innerHTML = `
+                    <h3>Algorithmic Assessment</h3>
+                    <p>${interpretation}</p>
+                    ${document.getElementById('api-key-main').value.trim() ? '' : '<div style="margin-top:15px;padding:10px;background:#fff3cd;border-radius:5px;font-size:0.9em;"><strong>Enhancement Available:</strong> For deeper insights, enter your OpenAI API key on the first page and retake the assessment.</div>'}
+                `;
             }
-            
-            document.getElementById('interpretation').innerHTML = results.aiAnalysis ? 
-                `<h3>AI Expert Analysis</h3><div style="white-space: pre-wrap;">${interpretation}</div>` :
-                `<h3>Algorithmic Assessment</h3><p>${interpretation}</p><div style="margin-top:15px;padding:10px;background:#fff3cd;border-radius:5px;font-size:0.9em;"><strong>Enhancement Available:</strong> For deeper insights, use the AI analysis feature in the previous step.</div>`;
         }
 
         function downloadReport() {
